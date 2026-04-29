@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Qué tanto conoces a Andrés o Bus?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --success: #2d9e5f;
+      --error:   #A32D2D;
+      --bg-page: #080f0b;
+      --bg-card: #0e1a12;
+      --bg-opt:  rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.09);
+      --border-hover: rgba(45,158,95,0.6);
+      --text-main:  #e8f5ee;
+      --text-muted: #7aab8e;
+      --text-faint: #3d6b50;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { width: 500px; height: 500px; background: #1D9E75; top: -150px; right: -100px; }
+    body::after  { width: 400px; height: 400px; background: #0f5c2e; bottom: -120px; left: -80px; }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem 2.25rem 2.5rem;
+      width: 100%;
+      max-width: 520px;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      border-radius: 24px 24px 0 0;
+      background: linear-gradient(90deg, #1D9E75, #97C459, #2d9e5f);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header p {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px;
+    }
+    .card-header h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.6rem; color: var(--text-main); line-height: 1.2;
+    }
+    .card-header h1 span { color: #2d9e5f; }
+
+    /* ── SCREEN: NAME ───────────────────────── */
+    #name-screen { animation: fadeIn .4s ease; }
+
+    .name-intro {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem; line-height: 1.55;
+      color: var(--text-main); margin-bottom: 1.5rem; text-align: center;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg-opt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: var(--text-main);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 1rem;
+    }
+    input[type="text"]::placeholder { color: var(--text-faint); }
+    input[type="text"]:focus { border-color: var(--border-hover); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1a6b3a, #2d9e5f);
+      border: none; color: white; border-radius: 12px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 1rem;
+      letter-spacing: .02em; transition: opacity .15s, transform .1s;
+      box-shadow: 0 4px 20px rgba(29,158,117,.3);
+    }
+    .btn-primary:hover:not(:disabled) { opacity: .9; transform: scale(1.02); }
+    .btn-primary:active { transform: scale(.97); }
+    .btn-primary:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+
+    /* ── SCREEN: QUIZ ───────────────────────── */
+    #quiz-screen { display: none; animation: fadeIn .3s ease; }
+
+    .meta { display: flex; align-items: center; gap: 10px; margin-bottom: 1.75rem; }
+    .q-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-faint); white-space: nowrap;
+    }
+    .progress-track { flex: 1; height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1D9E75, #97C459);
+      border-radius: 2px;
+      transition: width .55s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+    .score-pill {
+      font-size: 11px; font-weight: 700; color: #97C459;
+      background: rgba(29,158,117,.15);
+      border: 1px solid rgba(29,158,117,.25);
+      padding: 4px 12px; border-radius: 20px; white-space: nowrap;
+    }
+
+    .question-text {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.25rem; line-height: 1.55;
+      color: var(--text-main); margin-bottom: 1.4rem;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 9px; }
+
+    .opt {
+      background: var(--bg-opt); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 15px;
+      color: var(--text-main); font-family: 'DM Sans', sans-serif; font-size: .9rem;
+      cursor: pointer; display: flex; align-items: center; gap: 11px; text-align: left;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .opt:hover:not(:disabled) {
+      background: rgba(45,158,95,.1); border-color: var(--border-hover);
+      transform: translateX(5px);
+    }
+    .opt-letter {
+      width: 27px; height: 27px; min-width: 27px; border-radius: 7px;
+      border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--text-faint);
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .opt:hover:not(:disabled) .opt-letter {
+      background: rgba(29,158,117,.2); border-color: rgba(29,158,117,.5); color: #97C459;
+    }
+    .opt.correct { background: rgba(45,158,95,.15); border-color: rgba(45,158,95,.5); color: #C0DD97; }
+    .opt.correct .opt-letter { background: var(--success); border-color: var(--success); color: white; }
+    .opt.wrong   { background: rgba(163,45,45,.15);  border-color: rgba(163,45,45,.5);  color: #F7C1C1; }
+    .opt.wrong .opt-letter   { background: var(--error);   border-color: var(--error);   color: white; }
+
+    /* ── SCREEN: RESULT ─────────────────────── */
+    #result-screen { display: none; animation: fadeIn .4s ease; }
+
+    .result-hero { text-align: center; padding: 0.5rem 0 1.5rem; }
+    .result-emoji { font-size: 2.75rem; display: block; margin-bottom: .6rem; }
+    .result-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.5rem; color: var(--text-main); margin-bottom: .2rem;
+    }
+    .score-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 1rem 0 .75rem; }
+    .score-big {
+      font-family: 'DM Serif Display', Georgia, serif; font-size: 4rem; line-height: 1;
+      background: linear-gradient(135deg, #97C459, #1D9E75);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .score-denom {
+      font-size: 1.5rem; color: var(--text-faint); align-self: flex-end;
+      margin-bottom: 6px; font-family: 'DM Serif Display', Georgia, serif;
+    }
+    .dots-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+    .dot { width: 28px; height: 6px; border-radius: 3px; }
+    .dot.hit  { background: #2d9e5f; }
+    .dot.miss { background: #A32D2D; }
+
+    .result-msg { font-size: .9rem; color: var(--text-muted); line-height: 1.7; font-style: italic; margin-bottom: .5rem; }
+    .saving-status { font-size: .78rem; color: var(--text-faint); min-height: 18px; margin-bottom: 1.25rem; }
+    .saving-status.ok  { color: #97C459; }
+    .saving-status.err { color: #F7C1C1; }
+
+    /* Breakdown table */
+    .breakdown-title {
+      font-size: 12px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-faint);
+      margin-bottom: .75rem; text-align: left;
+    }
+    .breakdown { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+
+    .bk-item {
+      background: var(--bg-opt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .bk-item.bk-ok   { border-color: rgba(45,158,95,.35); }
+    .bk-item.bk-fail { border-color: rgba(163,45,45,.35); }
+
+    .bk-icon {
+      width: 22px; height: 22px; min-width: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; margin-top: 1px;
+    }
+    .bk-ok   .bk-icon { background: rgba(45,158,95,.25);  color: #97C459; }
+    .bk-fail .bk-icon { background: rgba(163,45,45,.25);  color: #F7A1A1; }
+
+    .bk-body { flex: 1; }
+    .bk-q { font-size: .8rem; color: var(--text-faint); margin-bottom: 3px; line-height: 1.4; }
+    .bk-ans { font-size: .87rem; color: var(--text-main); line-height: 1.4; }
+    .bk-correct-hint { font-size: .78rem; color: #97C459; margin-top: 2px; }
+
+    .btn-restart {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #1a6b3a, #2d9e5f);
+      border: none; color: white; border-radius: 12px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .9rem;
+      letter-spacing: .02em; transition: opacity .15s, transform .1s;
+      box-shadow: 0 4px 20px rgba(29,158,117,.3);
+    }
+    .btn-restart:hover { opacity: .9; transform: scale(1.02); }
+    .btn-restart:active { transform: scale(.97); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="card-header">
+    <p>¿Qué tanto conoces a</p>
+    <h1>Andrés <span>o Bus</span>?</h1>
+  </div>
+
+  <!-- PANTALLA 1: Nombre -->
+  <div id="name-screen">
+    <p class="name-intro">Antes de empezar,<br>¿cómo te llamas? 👀</p>
+    <input type="text" id="name-input" placeholder="Escribe tu nombre aquí..." maxlength="40" />
+    <button class="btn-primary" id="btn-start" disabled onclick="startQuiz()">Empezar el reto →</button>
+  </div>
+
+  <!-- PANTALLA 2: Quiz -->
+  <div id="quiz-screen">
+    <div class="meta">
+      <span class="q-label" id="q-label">1 de 30</span>
+      <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+      <span class="score-pill" id="score-pill">0 pts</span>
+    </div>
+    <p class="question-text" id="q-text"></p>
+    <div class="options" id="opts"></div>
+  </div>
+
+  <!-- PANTALLA 3: Resultado -->
+  <div id="result-screen"></div>
+
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════
+  //  Pega tu URL de Google Apps Script aquí cuando la tengas
+  // ══════════════════════════════════════════════════════════════
+  const SHEET_URL = 'PEGA_TU_URL_AQUI';
+  // ══════════════════════════════════════════════════════════════
+
+  const questions = [
+    // ── COMIDA ──────────────────────────────────────────────────
+    {
+      q: "Si me dices que vamos por comida, ¿qué espero que elijas?",
+      options: ["Una buena pizza", "La vieja confiable: Hamburguesa", "Sushi bien elaborado", "Tacos al pastor"],
+      correct: 1
+    },
+    {
+      q: "¿Cuál es la bebida que siempre pido en un restaurante?",
+      options: ["Gaseosa", "Agua de panela", "Jugo natural", "Limonada de coco"],
+      correct: 3
+    },
+    {
+      q: "Si me invitas a comer y cocinas en casa, ¿qué plato me vuelve loco?",
+      options: ["Lasaña casera", "Bandeja paisa", "Arroz con pollo", "Sopa de lentejas"],
+      correct: 1
+    },
+    {
+      q: "¿Cuál es mi snack favorito cuando estoy viendo algo en pantalla?",
+      options: ["Papas fritas con sal", "Maní con chocolate", "Gomitas ácidas", "Palomitas de maíz"],
+      correct: 0
+    },
+    // ── VIAJES ──────────────────────────────────────────────────
+    {
+      q: "Si hoy me regalan un pasaje de avión, ¿a dónde despego?",
+      options: ["A las playas de Bora Bora", "Directo a Japón", "Un tour por Europa", "Nueva York"],
+      correct: 1
+    },
+    {
+      q: "En un viaje, ¿qué es lo primero que hago al llegar a una ciudad nueva?",
+      options: ["Busco dónde comer algo típico", "Saco la cámara y salgo a explorar", "Llego al hotel y descanso", "Busco el mirador más cercano"],
+      correct: 1
+    },
+    {
+      q: "¿Cuál sería mi estilo de viaje ideal?",
+      options: ["Todo planeado con itinerario", "Mochilero y sin rumbo fijo", "Resort todo incluido", "Roadtrip en carro con música"],
+      correct: 3
+    },
+    // ── PERSONALIDAD ────────────────────────────────────────────
+    {
+      q: "¿En qué gasto la mayor parte de mi tiempo libre sin darme cuenta?",
+      options: ["Viendo series en maratón", "Salir a tomar fotos", "En el mundo de los videojuegos", "Editando fotos o videos"],
+      correct: 2
+    },
+    {
+      q: "¿Cuál es mi mayor 'maña' o rasgo curioso?",
+      options: ["Hablo solo a veces", "Me distraigo totalmente de mi entorno", "Tengo que ordenar todo por colores", "Soy adicto al café"],
+      correct: 1
+    },
+    {
+      q: "Si tuviera un fin de semana libre sin planes, ¿qué haría?",
+      options: ["Salir a explorar con la cámara", "Quedarme en casa jugando", "Llamar a todos los amigos para reunión", "Viajar a donde sea"],
+      correct: 0
+    },
+    {
+      q: "¿Cómo describirían mis amigos mi humor?",
+      options: ["Siempre con chistes malos", "Serio pero con humor seco", "Muy sarcástico", "Bromista empedernido"],
+      correct: 2
+    },
+    {
+      q: "¿Cuándo me enojo, qué hago?",
+      options: ["Me quedo callado y me alejo", "Digo todo lo que pienso", "Pongo música muy duro", "Me pongo a limpiar todo"],
+      correct: 0
+    },
+    // ── MÚSICA Y CULTURA ────────────────────────────────────────
+    {
+      q: "¿Cuál sería mi concierto soñado?",
+      options: ["Feid", "Bad Bunny", "Andrés Cepeda", "Don Omar"],
+      correct: 2
+    },
+    {
+      q: "¿Qué género musical pondría si manejo solo de noche?",
+      options: ["Reggaetón viejo", "Vallenato clásico", "Rock en español", "Indie / alternativo"],
+      correct: 3
+    },
+    {
+      q: "¿Cuál es el tipo de película que nunca me negaría a ver?",
+      options: ["Comedia romántica", "Terror psicológico", "Ciencia ficción", "Documental de naturaleza"],
+      correct: 2
+    },
+    {
+      q: "¿Qué serie podría ver en bucle sin cansarme?",
+      options: ["Breaking Bad", "The Office", "Stranger Things", "Dark"],
+      correct: 1
+    },
+    // ── FOTOGRAFÍA Y CREATIVIDAD ────────────────────────────────
+    {
+      q: "Si salgo a fotografiar, ¿qué me atrae más?",
+      options: ["Paisajes urbanos de noche", "Retratos de personas", "Naturaleza y animales", "Arquitectura y estructuras"],
+      correct: 0
+    },
+    {
+      q: "¿En qué momento del día prefiero tomar fotos?",
+      options: ["Al amanecer (golden hour)", "Al mediodía con luz dura", "En la tarde (golden hour)", "De noche con luces artificiales"],
+      correct: 3
+    },
+    {
+      q: "¿Cuál es mi herramienta favorita para editar?",
+      options: ["Lightroom", "Photoshop", "Premiere Pro", "CapCut"],
+      correct: 0
+    },
+    // ── INFANCIA Y SUEÑOS ───────────────────────────────────────
+    {
+      q: "¿Qué quería ser cuando era pequeño (aunque no lo creas)?",
+      options: ["Fotógrafo", "Editor de video", "Basquetbolista", "Mariachi"],
+      correct: 3
+    },
+    {
+      q: "¿Cuál era mi caricatura favorita de niño?",
+      options: ["Bob Esponja", "Dragon Ball Z", "Los Padrinos Mágicos", "Naruto"],
+      correct: 1
+    },
+    {
+      q: "¿Cuál fue el primer videojuego que me enganchó de verdad?",
+      options: ["Mario Bros", "FIFA", "Counter-Strike", "GTA San Andreas"],
+      correct: 3
+    },
+    // ── SOCIAL ──────────────────────────────────────────────────
+    {
+      q: "En una reunión con amigos, ¿cuál es mi rol?",
+      options: ["El que pone la música", "El que trae la comida", "El que organiza los juegos", "El que llega tarde siempre"],
+      correct: 0
+    },
+    {
+      q: "¿Cómo prefiero pasar el cumpleaños?",
+      options: ["Fiesta grande con todos", "Cena íntima con los más cercanos", "De viaje a donde sea", "En casa viendo series"],
+      correct: 2
+    },
+    {
+      q: "¿Cuál es el plan perfecto un sábado por la noche?",
+      options: ["Salir a rumbear hasta el amanecer", "Juegos de mesa con amigos", "Ver películas en casa", "Salir a fotografiar la ciudad"],
+      correct: 3
+    },
+    // ── TECNOLOGÍA ──────────────────────────────────────────────
+    {
+      q: "¿Cuántas horas de verdad paso con el celular al día?",
+      options: ["Menos de 2 horas", "Entre 3 y 4 horas", "Entre 5 y 6 horas", "Más de 7 horas"],
+      correct: 2
+    },
+    {
+      q: "¿Qué app es la que más consumo?",
+      options: ["Instagram", "YouTube", "TikTok", "WhatsApp"],
+      correct: 1
+    },
+    // ── RETOS FINALES ───────────────────────────────────────────
+    {
+      q: "¿Qué haría si gano la lotería mañana?",
+      options: ["Compro cámara de mis sueños y viajo", "Invierto todo", "Le doy a la familia y listo", "Me compro una moto"],
+      correct: 0
+    },
+    {
+      q: "¿Cuál es la frase que más me sale en la vida cotidiana?",
+      options: ["'¿Comemos?'", "'Ya voy'", "'¿Puedo llevar la cámara?'", "'Tranquilo, ya'"],
+      correct: 1
+    },
+    {
+      q: "¿Qué diría la gente que me conoce que nunca me faltará en la maleta?",
+      options: ["Cargador extra", "La cámara fotográfica", "Audífonos", "Snacks"],
+      correct: 1
+    }
+  ];
+
+  const letters = ['A','B','C','D'];
+  let playerName = '', cur = 0, score = 0, hits = [], answers = [];
+
+  // Nombre input handlers
+  const nameInput = document.getElementById('name-input');
+  const btnStart  = document.getElementById('btn-start');
+
+  nameInput.addEventListener('input', () => {
+    btnStart.disabled = nameInput.value.trim().length < 2;
+  });
+  nameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && nameInput.value.trim().length >= 2) startQuiz();
+  });
+
+  function startQuiz() {
+    playerName = nameInput.value.trim();
+    document.getElementById('name-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    render();
+  }
+
+  function render() {
+    const q = questions[cur];
+    document.getElementById('q-label').textContent   = `${cur + 1} de ${questions.length}`;
+    document.getElementById('prog').style.width       = `${(cur / questions.length) * 100}%`;
+    document.getElementById('score-pill').textContent = `${score} pts`;
+    document.getElementById('q-text').textContent     = q.q;
+
+    const c = document.getElementById('opts');
+    c.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
+      btn.onclick = () => pick(i, btn);
+      c.appendChild(btn);
+    });
+  }
+
+  function pick(i, btn) {
+    const correct  = questions[cur].correct;
+    const allBtns  = document.querySelectorAll('.opt');
+    allBtns.forEach(b => b.disabled = true);
+
+    const isRight = i === correct;
+    if (isRight) { btn.classList.add('correct'); score++; hits.push(true); }
+    else         { btn.classList.add('wrong'); allBtns[correct].classList.add('correct'); hits.push(false); }
+
+    answers.push({
+      num:      cur + 1,
+      pregunta: questions[cur].q,
+      respondio: questions[cur].options[i],
+      correcta:  questions[cur].options[correct],
+      acerto:    isRight
+    });
+
+    setTimeout(() => {
+      cur++;
+      cur < questions.length ? render() : showResult();
+    }, 1400);
+  }
+
+  function showResult() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    const rs = document.getElementById('result-screen');
+    rs.style.display = 'block';
+
+    const total = questions.length;
+    const pct   = Math.round((score / total) * 100);
+
+    let emoji, title, msg;
+    if (pct === 100)    { emoji='🏆'; title='¡Eres mi alma gemela!';       msg=`${playerName}, nadie en el universo te supera. Conoces cada rincón de mi vida.`; }
+    else if (pct >= 80) { emoji='🌟'; title='¡Casi perfecto!';             msg=`${playerName}, definitivamente eres del círculo íntimo. Fallaste muy poquito.`; }
+    else if (pct >= 60) { emoji='✨'; title='¡Nada mal!';                  msg=`${playerName}, se nota que ponemos atención cuando hablamos. Vamos por encima de la mitad.`; }
+    else if (pct >= 40) { emoji='😅'; title='Mitad y mitad…';              msg=`${playerName}, algo sabes de mí, pero todavía hay secretos que no conoces.`; }
+    else if (pct >= 20) { emoji='👀'; title='¿Nos conocemos bien?';        msg=`${playerName}, parece que necesitamos pasar más tiempo juntos. ¡Hay mucho por descubrir!`; }
+    else                { emoji='🤔'; title='¿De verdad me conoces?';      msg=`${playerName}, esto fue un desastre (con cariño). ¡Hay que vernos más seguido!`; }
+
+    const dots = hits.map(h => `<div class="dot ${h?'hit':'miss'}"></div>`).join('');
+
+    // Breakdown por pregunta
+    const bkHTML = answers.map(a => `
+      <div class="bk-item ${a.acerto ? 'bk-ok' : 'bk-fail'}">
+        <div class="bk-icon">${a.acerto ? '✓' : '✗'}</div>
+        <div class="bk-body">
+          <div class="bk-q">P${a.num}. ${a.pregunta}</div>
+          <div class="bk-ans">Respondiste: <strong>${a.respondio}</strong></div>
+          ${!a.acerto ? `<div class="bk-correct-hint">→ Correcta: ${a.correcta}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    rs.innerHTML = `
+      <div class="result-hero">
+        <span class="result-emoji">${emoji}</span>
+        <h2 class="result-title">${title}</h2>
+        <div class="score-row">
+          <span class="score-big">${score}</span>
+          <span class="score-denom">/ ${total}</span>
+        </div>
+        <div class="dots-row">${dots}</div>
+        <p class="result-msg">${msg}</p>
+        <p class="saving-status" id="saving-status">Guardando resultado… ⏳</p>
+      </div>
+
+      <p class="breakdown-title">📋 Tus respuestas pregunta por pregunta</p>
+      <div class="breakdown">${bkHTML}</div>
+
+      <button class="btn-restart" onclick="location.reload()">🔄 Intentar de nuevo</button>
+    `;
+
+    sendToSheets();
+  }
+
+  function sendToSheets() {
+    const status = document.getElementById('saving-status');
+    if (!SHEET_URL || SHEET_URL === 'PEGA_TU_URL_AQUI') {
+      status.textContent = '';
+      return;
+    }
+
+    // Construye un resumen compacto para la hoja
+    const resumen = answers.map(a =>
+      `P${a.num}: "${a.respondio}" ${a.acerto ? '✓' : `✗ (→ ${a.correcta})`}`
+    ).join(' | ');
+
+    const payload = {
+      nombre:     playerName,
+      puntaje:    `${score}/${questions.length}`,
+      porcentaje: `${Math.round((score/questions.length)*100)}%`,
+      fecha:      new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+      respuestas: resumen
+    };
+
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      status.textContent = '✓ Resultado guardado en Google Sheets';
+      status.className = 'saving-status ok';
+    })
+    .catch(() => {
+      status.textContent = '⚠ No se pudo guardar — revisa la URL del script';
+      status.className = 'saving-status err';
+    });
+  }
+
+  window.onload = () => nameInput.focus();
+</script>
+</body>
+</html>
